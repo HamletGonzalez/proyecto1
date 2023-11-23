@@ -1,4 +1,14 @@
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /*
@@ -11,7 +21,7 @@ import javax.swing.JOptionPane;
  * @author 18299
  */
 public class Partidos extends javax.swing.JInternalFrame {
-
+    boolean creando = true;
     /**
      * Creates new form Partidos
      */
@@ -36,6 +46,8 @@ public class Partidos extends javax.swing.JInternalFrame {
         votos = new javax.swing.JTextField();
         estado = new javax.swing.JTextField();
         Guardar = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
 
         setClosable(true);
         setIconifiable(true);
@@ -54,12 +66,30 @@ public class Partidos extends javax.swing.JInternalFrame {
 
         jLabel4.setText("Votos");
 
+        estado.setForeground(new java.awt.Color(255, 0, 0));
+        estado.setText("CREANDO");
+        estado.setCaretColor(new java.awt.Color(255, 0, 0));
+        estado.setDisabledTextColor(new java.awt.Color(255, 0, 0));
         estado.setEnabled(false);
 
         Guardar.setText("Guardar");
         Guardar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 GuardarActionPerformed(evt);
+            }
+        });
+
+        jButton1.setText("Salir");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jButton2.setText("Limpiar");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
             }
         });
 
@@ -73,27 +103,26 @@ public class Partidos extends javax.swing.JInternalFrame {
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(estado, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
+                        .addGap(27, 27, 27)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(27, 27, 27)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jLabel4)
-                                        .addGap(71, 71, 71)
-                                        .addComponent(votos, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jLabel1)
-                                        .addGap(89, 89, 89)
-                                        .addComponent(id, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jLabel2)
-                                        .addGap(39, 39, 39)
-                                        .addComponent(desc, javax.swing.GroupLayout.PREFERRED_SIZE, 217, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(146, 146, 146)
-                                .addComponent(Guardar)))
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2))
+                        .addGap(39, 39, 39)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(votos, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(desc, javax.swing.GroupLayout.PREFERRED_SIZE, 217, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(id, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(0, 43, Short.MAX_VALUE)))
                 .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addGap(62, 62, 62)
+                .addComponent(Guardar)
+                .addGap(18, 18, 18)
+                .addComponent(jButton2)
+                .addGap(18, 18, 18)
+                .addComponent(jButton1)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -111,9 +140,12 @@ public class Partidos extends javax.swing.JInternalFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(votos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 44, Short.MAX_VALUE)
-                .addComponent(Guardar)
-                .addGap(39, 39, 39))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 46, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(Guardar)
+                    .addComponent(jButton1)
+                    .addComponent(jButton2))
+                .addGap(37, 37, 37))
         );
 
         pack();
@@ -130,6 +162,81 @@ public class Partidos extends javax.swing.JInternalFrame {
             JOptionPane.showMessageDialog(null, "La descripcion es obligatoria.");
             return;
         }
+        String mvotos = votos.getText();
+        if(mvotos.isEmpty()){
+            JOptionPane.showMessageDialog(null, "Los votos son obligatorios.");
+            return;
+        }
+        
+        if(creando == true){
+            File f = new File("C:partidos.txt");
+            
+            try{
+                if(!f.exists()){
+                    f.createNewFile();
+                }
+                BufferedReader br = new BufferedReader(new FileReader(f));
+                BufferedWriter bw = new BufferedWriter(new FileWriter("C:partidos.txt"));
+                
+                bw.write(mid + " ; " + mdesc + " ; " + mvotos);
+                
+                bw.flush();
+                
+            }catch(IOException ex){
+                System.out.println("Error E/S: "+ex);
+            }
+        }else{
+            File fnuevo = new File("C:partidos1.txt");
+            File fantiguo = new File("C:partidos.txt");
+            
+            String acadena = (mid + " ; " + mdesc + " ; " + mvotos);
+            String bcadena = (mid + " ; " + mdesc + " ; " + mvotos);
+            int aid = Integer.parseInt(mid);
+            
+            BufferedReader br;
+            
+            try{
+                if(fantiguo.exists()){
+                    br = new BufferedReader(new FileReader(fantiguo));
+                    String linea;
+                    
+                    Scanner s = new Scanner(fantiguo);
+                    while(s.hasNextLine()){
+                        linea = s.nextLine();
+                        Scanner sl = new Scanner(linea);
+                        
+                        sl.useDelimiter("\\s*;\\s*");
+                        int bid = Integer.parseInt(sl.next());
+                        
+                        if(aid==bid){
+                            BufferedWriter bw = new BufferedWriter(new FileWriter("C:partidos1.txt"));
+                            bw.write(mid + " ; " + mdesc + " ; " + mvotos);
+                        }else{
+                            BufferedWriter bw = new BufferedWriter(new FileWriter("C:partidos1.txt"));
+                            bw.write(linea);
+                        }
+                        
+                    }//fin whilw
+                    s.close();
+                    
+                    String nomantiguo = fantiguo.getName();
+                    
+                    //metodo borrar
+                    fantiguo.delete();
+                    fnuevo.renameTo(fantiguo);
+                }
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(Partidos.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Partidos.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+        estado.setText("CREANDO");
+        id.setText("");
+        desc.setText("");
+        votos.setText("");
+        
 
     }//GEN-LAST:event_GuardarActionPerformed
 
@@ -139,7 +246,56 @@ public class Partidos extends javax.swing.JInternalFrame {
         
         mid = Integer.parseInt(id.getText());
         
+        Scanner s;
+        
+        try{
+            File f = new File("C:partidos.txt");
+            s = new Scanner(f);
+            
+            if(!f.exists()){
+                f.createNewFile();
+            }else{
+                while (s.hasNextLine() && !creando){
+                    String linea = s.nextLine();
+                    Scanner sl = new Scanner(linea);
+                    
+                    sl.useDelimiter("\\s*;\\s*");
+                    if(mid == Integer.parseInt(sl.next())){
+                        desc.setText(sl.next());
+                        votos.setText(sl.next());
+                        creando = true;
+                        
+                        estado.setText("MODIFICANDO");
+                        
+                    }else{
+                        creando = false;
+                        
+                        estado.setText("CREANDO");
+                    }
+                    
+                }
+                    
+            }
+            s.close();
+        
+        }catch(IOException e1){
+            e1.printStackTrace();
+        }
+        
     }//GEN-LAST:event_idActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        
+        dispose();
+        //System.exit(0);
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        estado.setText("CREANDO");
+        id.setText("");
+        desc.setText("");
+        votos.setText("");
+    }//GEN-LAST:event_jButton2ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -147,6 +303,8 @@ public class Partidos extends javax.swing.JInternalFrame {
     private javax.swing.JTextField desc;
     private javax.swing.JTextField estado;
     private javax.swing.JTextField id;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;
